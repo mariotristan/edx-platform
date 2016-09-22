@@ -12,6 +12,8 @@ from django.test.client import RequestFactory
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import UNUSABLE_PASSWORD_PREFIX
 from django.contrib.auth.tokens import default_token_generator
+from provider import constants
+from provider.oauth2.models import AccessToken, Client
 
 from django.utils.http import int_to_base36
 
@@ -113,8 +115,11 @@ class ResetPasswordTests(EventTestMixin, CacheIsolationTestCase):
 
         good_req = self.request_factory.post('/password_reset/', {'email': self.user.email})
         good_req.user = self.user
+        client = Client.objects.create(client_type=constants.CONFIDENTIAL)
+        AccessToken.objects.create(token="test_access_token", client=client, user=self.user)
         good_resp = password_reset(good_req)
         self.assertEquals(good_resp.status_code, 200)
+        self.assertFalse(AccessToken.objects.filter(token="test_access_token").exists())
         obj = json.loads(good_resp.content)
         self.assertEquals(obj, {
             'success': True,

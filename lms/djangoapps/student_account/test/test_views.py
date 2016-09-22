@@ -13,12 +13,15 @@ from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.contrib.messages.middleware import MessageMiddleware
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.http import HttpRequest
 from edx_rest_api_client import exceptions
 from nose.plugins.attrib import attr
+from provider import constants
+from provider.oauth2.models import AccessToken, Client
 from testfixtures import LogCapture
 
 from commerce.models import CommerceConfiguration
@@ -158,6 +161,19 @@ class StudentAccountUpdateTest(CacheIsolationTestCase, UrlResetMixin):
             response = self._change_password()
             self.assertEqual(response.status_code, 400)
 
+    def test_access_token_invalidation_logged_out(self):
+        self.client.logout()
+        self._create_access_token()
+        response = self._change_password(email=self.OLD_EMAIL)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(AccessToken.objects.filter(token="test_access_token").exists())
+
+    def test_access_token_invalidation_logged_in(self):
+        self._create_access_token()
+        response = self._change_password()
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(AccessToken.objects.filter(token="test_access_token").exists())
+
     def test_password_change_inactive_user(self):
         # Log out the user created during test setup
         self.client.logout()
@@ -216,6 +232,14 @@ class StudentAccountUpdateTest(CacheIsolationTestCase, UrlResetMixin):
             data['email'] = email
 
         return self.client.post(path=reverse('password_change_request'), data=data)
+
+    def _create_access_token(self, user=None):
+        """Create access token for given user if user provided else for default user"""
+        if not user:
+            user = User.objects.get(email=self.OLD_EMAIL)
+
+        client = Client.objects.create(client_type=constants.CONFIDENTIAL)
+        AccessToken.objects.create(token="test_access_token", client=client, user=user)
 
 
 @attr(shard=3)

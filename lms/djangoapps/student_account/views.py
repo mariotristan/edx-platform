@@ -8,6 +8,7 @@ from datetime import datetime
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse, resolve
 from django.http import (
     HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpRequest
@@ -39,7 +40,7 @@ from student.views import (
     signin_user as old_login_view,
     register_user as old_register_view
 )
-from student.helpers import get_next_url_for_login_page
+from student.helpers import get_next_url_for_login_page, invalidate_access_token
 import third_party_auth
 from third_party_auth import pipeline
 from third_party_auth.decorators import xframe_allow_whitelisted
@@ -171,6 +172,8 @@ def password_change_request_handler(request):
     if email:
         try:
             request_password_change(email, request.get_host(), request.is_secure())
+            user = User.objects.get(email=email) if not user.is_authenticated() else user
+            invalidate_access_token(user)
         except UserNotFound:
             AUDIT_LOG.info("Invalid password reset attempt")
             # Increment the rate limit counter
