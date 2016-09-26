@@ -15,17 +15,20 @@ set -e
 echo "Setting up for accessibility tests..."
 source scripts/jenkins-common.sh
 
-echo "Running explicit accessibility tests..."
-SELENIUM_BROWSER=phantomjs paver test_a11y --with-xunitmp
+# echo "Running explicit accessibility tests..."
+# SELENIUM_BROWSER=phantomjs paver test_a11y --with-xunitmp
 
-echo "Generating coverage report..."
-paver a11y_coverage
+# echo "Generating coverage report..."
+# paver a11y_coverage
+
+export RUN_PA11YCRAWLER="1"
+export SCRAPY_SETTINGS_MODULE='pa11ycrawler.settings'
 
 if [ "$RUN_PA11YCRAWLER" = "1" ]
 then
     echo "Running pa11ycrawler against test course..."
     paver pa11ycrawler --fasttest --skip-clean --fetch-course --with-html
 
-    echo "Generating coverage report..."
-    paver pa11ycrawler_coverage
+    # echo "Generating coverage report..."
+    # paver pa11ycrawler_coverage
 fi
