@@ -155,7 +155,7 @@ class CapaHtmlRenderTest(unittest.TestCase):
         response_element = rendered_html.find("section")
 
         # question index for screen readers
-        self.assertEqual(response_element.find('h4').attrib['value'], 'Question 1')
+        self.assertEqual(response_element.find('h4').text, 'Question 1')
 
         # Expect that the response <section>
         # that contains a <div> for the textline
@@ -221,8 +221,8 @@ class CapaHtmlRenderTest(unittest.TestCase):
         problem = new_loncapa_problem(xml)
         rendered_html = etree.XML(problem.get_html())
         sections = rendered_html.findall('section')
-        self.assertEqual(sections[0].find('h4').attrib['value'], 'Question 1')
-        self.assertEqual(sections[1].find('h4').attrib['value'], 'Question 2')
+        self.assertEqual(sections[0].find('h4').text, 'Question 1')
+        self.assertEqual(sections[1].find('h4').text, 'Question 2')
 
     def test_render_response_with_overall_msg(self):
         # CustomResponse script that sets an overall_message
