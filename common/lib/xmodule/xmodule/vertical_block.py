@@ -41,6 +41,7 @@ class VerticalBlock(SequenceFields, XModuleFields, StudioEditableBlock, XmlParse
         """
         fragment = Fragment()
         contents = []
+        display_name = self.display_name_with_default
 
         if context:
             child_context = copy(context)
@@ -65,6 +66,7 @@ class VerticalBlock(SequenceFields, XModuleFields, StudioEditableBlock, XmlParse
         fragment.add_content(self.system.render_template('vert_module.html', {
             'items': contents,
             'xblock_context': context,
+            'unit_title': str(display_name),
             'show_bookmark_button': True,
             'bookmarked': child_context['bookmarked'],
             'bookmark_id': "{},{}".format(child_context['username'], unicode(self.location))
