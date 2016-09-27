@@ -7,7 +7,6 @@ import pytz
 import random
 
 import ddt
-from path import Path
 
 from student.tests.factories import UserFactory
 from xmodule.modulestore import ModuleStoreEnum
@@ -104,60 +103,6 @@ class GradesTransformerTestCase(CourseStructureTestCase):
                     }
                 ]
             }
-        ])
-
-    def build_course_with_block_from_file(self, block_type, filename, metadata=None):
-        """
-        Build a course with a block of the named type using the XML file
-        specified.
-
-        Metadata for the block may be specified, but defaults to
-        self.problem_metadata.
-
-        The XML file is found in lms/djangoapps/grades/tests/data.
-        """
-        metadata = metadata or self.problem_metadata
-        filepath = Path(__file__).dirname() / 'data' / filename
-        data = open(filepath).read()
-
-        # Special structure-related keys start with '#'.  The rest get passed as
-        # kwargs to Factory.create.  See docstring at
-        # `CourseStructureTestCase.build_course` for details.
-        return self.build_course([
-            {
-                u'org': u'GradesTestOrg',
-                u'course': u'GB101',
-                u'run': u'cannonball',
-                u'metadata': {u'format': u'homework'},
-                u'#type': u'course',
-                u'#ref': u'course',
-                u'#children': [
-                    {
-                        u'#type': u'chapter',
-                        u'#ref': u'chapter',
-                        u'#children': [
-                            {
-                                u'#type': u'sequential',
-                                u'#ref': 'sequential',
-                                u'#children': [
-                                    {
-                                        u'#type': u'vertical',
-                                        u'#ref': u'vertical',
-                                        u'#children': [
-                                            {
-                                                u'metadata': metadata,
-                                                u'#type': block_type,
-                                                u'#ref': u'problem',
-                                                u'data': data,
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
         ])
 
     def build_complicated_hypothetical_course(self):

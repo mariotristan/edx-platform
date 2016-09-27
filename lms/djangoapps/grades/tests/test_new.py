@@ -3,7 +3,6 @@ Test saved subsection grade functionality.
 """
 
 import datetime
-import os
 import pytz
 
 import ddt
@@ -16,6 +15,7 @@ from courseware.tests.helpers import get_request_for_user
 from courseware.tests.test_submitting_problems import ProblemSubmissionTestMixin
 from lms.djangoapps.course_blocks.api import get_course_blocks
 from lms.djangoapps.grades.config.tests.utils import persistent_grades_feature_flags
+from openedx.core.lib.xblock_utils.test_utils import add_xml_block_from_file
 from student.models import CourseEnrollment
 from student.tests.factories import UserFactory
 from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase, SharedModuleStoreTestCase
@@ -280,22 +280,6 @@ class TestMultipleProblemTypesSubsectionScores(ModuleStoreTestCase, ProblemSubmi
             display_name=u'Test Vertical 1'
         )
 
-    def _add_block_from_xml_file(self, block_type, filename, parent, metadata=None):
-        """
-        Create a block of the specified type with content included from the
-        specified XML file.
-
-        XML files live in lms/djangoapps/grades/tests/data.
-        """
-        with open(os.path.join(os.path.dirname(__file__), u'data', filename)) as datafile:
-            return ItemFactory.create(
-                parent=parent,
-                category=block_type,
-                data=datafile.read().decode('utf-8'),
-                metadata=metadata or self.default_problem_metadata,
-                display_name=u'problem'
-            )
-
     def _get_fresh_subsection_score(self, course_structure, subsection):
         """
         Return a Score object for the specified subsection.
@@ -325,14 +309,14 @@ class TestMultipleProblemTypesSubsectionScores(ModuleStoreTestCase, ProblemSubmi
         """
         metadata = self._get_altered_metadata(alterations)
 
-        self._add_block_from_xml_file(u'problem', u'capa.xml', parent=self.vert1, metadata=metadata)
+        add_xml_block_from_file(u'problem', u'capa.xml', parent=self.vert1, metadata=metadata)
         course_structure = get_course_blocks(self.student, self.course.location)
 
         self.submit_question_answer(u'problem', {u'2_1': u'Correct'})
         return self._get_fresh_subsection_score(course_structure, self.seq1)
 
     def test_score_submission_for_capa_problems(self):
-        self._add_block_from_xml_file(u'problem', u'capa.xml', parent=self.vert1)
+        add_xml_block_from_file(u'problem', u'capa.xml', parent=self.vert1, metadata=self.default_problem_metadata)
         course_structure = get_course_blocks(self.student, self.course.location)
 
         score = self._get_fresh_subsection_score(course_structure, self.seq1)
@@ -363,7 +347,7 @@ class TestMultipleProblemTypesSubsectionScores(ModuleStoreTestCase, ProblemSubmi
             }
         else:
             metadata = None  # Use the default
-        self._add_block_from_xml_file(block_type, filename, parent=self.vert1, metadata=metadata)
+        add_xml_block_from_file(block_type, filename, parent=self.vert1, metadata=metadata)
 
     @ddt.data(
         ({}, 1.25, 2.5),
