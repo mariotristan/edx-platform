@@ -3,7 +3,14 @@ from datetime import datetime
 import urllib
 
 from django.core.urlresolvers import reverse, NoReverseMatch
-from provider.oauth2.models import AccessToken, RefreshToken
+from oauth2_provider.models import (
+    AccessToken as dot_access_token,
+    RefreshToken as dot_refresh_token
+)
+from provider.oauth2.models import (
+    AccessToken as dop_access_token,
+    RefreshToken as dop_refresh_token
+)
 from pytz import UTC
 
 import third_party_auth
@@ -233,9 +240,11 @@ def get_next_url_for_login_page(request):
     return redirect_to
 
 
-def invalidate_access_token(user):
+def destroy_oauth_tokens(user):
     """
-    Invalidates access tokens for the given user.
+    Destroys ALL OAuth access and refresh tokens for the given user.
     """
-    AccessToken.objects.filter(user=user).delete()
-    RefreshToken.objects.filter(user=user).delete()
+    dop_access_token.objects.filter(user=user).delete()
+    dop_refresh_token.objects.filter(user=user).delete()
+    dot_access_token.objects.filter(user=user).delete()
+    dot_refresh_token.objects.filter(user=user).delete()

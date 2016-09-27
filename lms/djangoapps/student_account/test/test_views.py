@@ -13,15 +13,15 @@ from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.urlresolvers import reverse
 from django.contrib import messages
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.messages.middleware import MessageMiddleware
 from django.test import TestCase
 from django.test.utils import override_settings
 from django.http import HttpRequest
+from edx_oauth2_provider.tests.factories import ClientFactory, AccessTokenFactory
 from edx_rest_api_client import exceptions
 from nose.plugins.attrib import attr
-from provider import constants
-from provider.oauth2.models import AccessToken, Client
+from provider.oauth2.models import AccessToken, Client, RefreshTokenFactory
 from testfixtures import LogCapture
 
 from commerce.models import CommerceConfiguration
@@ -42,6 +42,7 @@ from openedx.core.djangoapps.theming.tests.test_util import with_comprehensive_t
 
 
 LOGGER_NAME = 'audit'
+User = get_user_model()  # pylint:disable=invalid-name
 
 
 @ddt.ddt
@@ -163,16 +164,18 @@ class StudentAccountUpdateTest(CacheIsolationTestCase, UrlResetMixin):
 
     def test_access_token_invalidation_logged_out(self):
         self.client.logout()
-        self._create_access_token()
+        user = User.objects.get(email=self.OLD_EMAIL)
+        self._create_dop_tokens(user)
         response = self._change_password(email=self.OLD_EMAIL)
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(AccessToken.objects.filter(token="test_access_token").exists())
+        self.assertFalse(AccessToken.objects.filter(user=user).exists())
 
     def test_access_token_invalidation_logged_in(self):
-        self._create_access_token()
+        user = User.objects.get(email=self.OLD_EMAIL)
+        self._create_dop_tokens(user)
         response = self._change_password()
         self.assertEqual(response.status_code, 200)
-        self.assertFalse(AccessToken.objects.filter(token="test_access_token").exists())
+        self.assertFalse(AccessToken.objects.filter(user=user).exists())
 
     def test_password_change_inactive_user(self):
         # Log out the user created during test setup
@@ -233,13 +236,16 @@ class StudentAccountUpdateTest(CacheIsolationTestCase, UrlResetMixin):
 
         return self.client.post(path=reverse('password_change_request'), data=data)
 
-    def _create_access_token(self, user=None):
+    def _create_dop_tokens(self, user=None):
         """Create access token for given user if user provided else for default user"""
         if not user:
             user = User.objects.get(email=self.OLD_EMAIL)
 
-        client = Client.objects.create(client_type=constants.CONFIDENTIAL)
-        AccessToken.objects.create(token="test_access_token", client=client, user=user)
+        client = ClientFactory()
+        access_token = AccessTokenFactory(user=user, client=client)
+        RefreshTokenFactory(user=user, client=client, access_token=access_token)
+
+    
 
 
 @attr(shard=3)
