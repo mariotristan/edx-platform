@@ -4,6 +4,7 @@ var DialogTabControls = (function() {
     var focusableChildren,
         numElements,
         currentIndex,
+        focusableElementSelectors = 'a, input[type=text], input[type=submit], select, textarea, button',
         setCurrentIndex = function(currentElement) {
             var elementIndex = focusableChildren.index(currentElement);
             if (elementIndex >= 0) {
@@ -11,9 +12,7 @@ var DialogTabControls = (function() {
             }
         },
         initializeTabKeyValues = function(elementName, $closeButton) {
-            focusableChildren = $(elementName).find(
-                'a, input[type=text], input[type=submit], select, textarea, button'
-            );
+            focusableChildren = $(elementName).find(focusableElementSelectors);
             if ($closeButton) {
                 focusableChildren = focusableChildren.add($closeButton);
             }
@@ -37,8 +36,6 @@ var DialogTabControls = (function() {
             }
 
             focusElement();
-
-            return false;
         },
         focusNext = function() {
             currentIndex++;
@@ -47,17 +44,17 @@ var DialogTabControls = (function() {
             }
 
             focusElement();
-
-            return false;
         },
-        setKeydownListener = function($modal, $closeButton) {
-            $modal.on('keydown', function(e) {
+        setKeydownListener = function($element, $closeButton) {
+            $element.on('keydown', function(e) {
                 var keyCode = e.keyCode || e.which,
                     escapeKeyCode = 27,
                     tabKeyCode = 9;
                 if (keyCode === escapeKeyCode) {
                     e.preventDefault();
-                    $closeButton.click();
+                    if ($closeButton) {
+                        $closeButton.click();
+                    }
                 }
                 if (keyCode === tabKeyCode && e.shiftKey) {
                     e.preventDefault();
