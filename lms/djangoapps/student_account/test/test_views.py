@@ -245,8 +245,6 @@ class StudentAccountUpdateTest(CacheIsolationTestCase, UrlResetMixin):
         access_token = AccessTokenFactory(user=user, client=client)
         RefreshTokenFactory(user=user, client=client, access_token=access_token)
 
-    
-
 
 @attr(shard=3)
 @ddt.ddt
