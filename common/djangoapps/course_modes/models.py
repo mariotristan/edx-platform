@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from xmodule_django.models import CourseKeyField
+from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 
 Mode = namedtuple('Mode',
                   [
@@ -607,6 +608,9 @@ class CourseMode(models.Model):
         """
         if modes_dict is None:
             modes_dict = cls.modes_for_course_dict(course_id)
+
+        if configuration_helpers.is_site_configuration_enabled():
+            return configuration_helpers.get_value('show_ecommerce_reports', False)
 
         # White-label uses course mode honor with a price
         # to indicate that the course is behind a paywall.
