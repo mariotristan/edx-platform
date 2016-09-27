@@ -341,12 +341,9 @@ class TestMultipleProblemTypesSubsectionScores(ModuleStoreTestCase, ProblemSubmi
         """
         if block_type == u'library_content':
             # Library content does not have a weight
-            metadata = {
-                u'graded': True,
-                u'due': datetime.datetime(2099, 3, 15, 12, 30, 0, tzinfo=pytz.utc),
-            }
+            metadata = self._get_altered_metadata({u'graded': True})
         else:
-            metadata = None  # Use the default
+            metadata = self.default_problem_metadata
         add_xml_block_from_file(block_type, filename, parent=self.vert1, metadata=metadata)
 
     @ddt.data(

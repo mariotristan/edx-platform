@@ -215,7 +215,7 @@ class AboutTestCaseXML(LoginEnrollmentTestCase, ModuleStoreTestCase):
         import_course_from_xml(
             self.store,
             'test_user',
-            TEST_DATA_DIR,
+            TEST_DATA_DIR / u'courses_exports',
             source_dirs=['2014'],
             static_content_store=None,
             target_id=self.xml_course_id,
